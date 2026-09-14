@@ -22,7 +22,28 @@
 
 ## System Architecture & Pipeline Flowchart
 
-![Signal Processing Pipeline Architecture](pipeline_architecture.png)
+```mermaid
+graph TD
+    classDef input fill:#161b22,stroke:#388bfd,stroke-width:2px,color:#f0f6fc;
+    classDef cv fill:#161b22,stroke:#238636,stroke-width:2px,color:#f0f6fc;
+    classDef spatial fill:#161b22,stroke:#a371f7,stroke-width:2px,color:#f0f6fc;
+    classDef buffer fill:#161b22,stroke:#f0883e,stroke-width:2px,color:#f0f6fc;
+    classDef detrend fill:#161b22,stroke:#d29922,stroke-width:2px,color:#f0f6fc;
+    classDef filter fill:#161b22,stroke:#f85149,stroke-width:2px,color:#f0f6fc;
+    classDef spectral fill:#161b22,stroke:#39c5cf,stroke-width:2px,color:#f0f6fc;
+    classDef output fill:#161b22,stroke:#56d364,stroke-width:2px,color:#f0f6fc;
+
+    S1["<b>1. Video Acquisition & Frame Capture</b><br/>• 30 FPS Standard Webcam / USB Video Stream / Synthetic Pulse Generator<br/>• High-precision hardware timestamping via time.perf_counter() (Empirical Fs tracking)"]:::input
+    S2["<b>2. Computer Vision & Multi-ROI Spatial Extraction</b><br/>• Frontal Face Tracking (OpenCV Haar Cascade) with 5-pixel deadband damping<br/>• Isolated Anatomical ROIs: Forehead (15-32% H) + Central Maxillary / Cheeks (High Perfusion)"]:::cv
+    S3["<b>3. Spatial Channel Extraction & Color Constancy</b><br/>• 10th-90th Percentile Luminance Trimming (rejects hair, shadows, specular glint)<br/>• <b>Green Mode:</b> s(t) = -G(t)/L(t) &nbsp;|&nbsp; <b>CHROM Mode:</b> 3D-to-1D Subspace Projection (Xs - α Ys)"]:::spatial
+    S4["<b>4. Temporal Rolling Buffer & Dynamic Pruning</b><br/>• 7.5-Second Sliding Window Buffer (approx. 225 frames at 30 Hz)<br/>• Dynamic time-stamp pruning: Fs_empirical = (N-1) / (t_last - t_first)"]:::buffer
+    S5["<b>5. Digital Detrending (Baseline Drift Suppression)</b><br/>• Linear least-squares drift removal: s(t) - (m·t + c)<br/>• Uniform moving average subtraction (2.0s window, mode='nearest') to strip slow respiration"]:::detrend
+    S6["<b>6. 4th-Order Butterworth Bandpass Filter</b><br/>• Physiological Cardiac Passband: 0.75 Hz to 2.50 Hz (45 to 150 BPM)<br/>• Zero-phase forward-backward filtering (sosfiltfilt) guarantees 0° phase distortion"]:::filter
+    S7["<b>7. Windowed FFT, Spectral Density & Peak Tracking</b><br/>• Hanning Window taper (suppresses spectral leakage sidelobes to -31.5 dB)<br/>• Zero-padding to N = 2048 points (fine bin resolution Δf ≈ 0.0146 Hz ≈ 0.88 BPM)<br/>• Recursive periodogram averaging: P_smooth = 0.85·P_prev + 0.15·P_raw with Gaussian prior"]:::spectral
+    S8["<b>8. Real-Time Oscilloscope HUD & Clinical Telemetry</b><br/>• Digital HR Readout: HR = f_peak × 60 BPM with live BVP pulse waveform<br/>• Spectral Energy Ratio SNR (dB) & Multi-tier Quality Gauge: OPTIMAL / GOOD / STABILIZING / WEAK"]:::output
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8
+```
 
 ---
 

@@ -31,10 +31,6 @@ This project implements **Remote Photoplethysmography (rPPG)** to eliminate phys
 
 ## 3. Signal Processing Pipeline & Block Diagram
 
-![Signal Processing Pipeline Architecture](pipeline_architecture.png)
-
-### 3.1 Pipeline Dataflow (Interactive Architecture)
-
 ```mermaid
 graph TD
     classDef input fill:#161b22,stroke:#388bfd,stroke-width:2px,color:#f0f6fc;
@@ -46,14 +42,14 @@ graph TD
     classDef spectral fill:#161b22,stroke:#39c5cf,stroke-width:2px,color:#f0f6fc;
     classDef output fill:#161b22,stroke:#56d364,stroke-width:2px,color:#f0f6fc;
 
-    S1["<b>1. Video Acquisition & Frame Capture</b><br/>Webcam / MP4 Stream / Synthetic Generator &bull; Fs ≈ 30 Hz<br/>High-precision hardware timestamping via time.perf_counter()"]:::input
-    S2["<b>2. Computer Vision & Multi-ROI Spatial Extraction</b><br/>Haar Cascade Face Tracking &bull; 5px Deadband Jitter Suppression<br/>Forehead & Cheeks ROIs &bull; Central Maxillary Region (High Perfusion)"]:::cv
-    S3["<b>3. Spatial Channel Extraction & Color Constancy</b><br/>10th-90th Percentile Luminance Trimming (Glare / Shadow Rejection)<br/><b>Green Mode:</b> s(t) = -G(t)/L(t) &nbsp;|&nbsp; <b>CHROM Mode:</b> 3D-to-1D Subspace Projection"]:::spatial
-    S4["<b>4. Rolling Buffer & Empirical Sampling Rate</b><br/>7.5-Second Sliding Window &bull; Fs_empirical = (N-1) / (t_last - t_first)<br/>Dynamic Pruning (Guarantees zero phase lag across frame drops)"]:::buffer
-    S5["<b>5. Digital Detrending (Baseline Drift Suppression)</b><br/>Linear Least-Squares Detrending: s(t) - (m·t + c)<br/>Moving Average Subtraction (2.0s kernel, mode='nearest')"]:::detrend
-    S6["<b>6. 4th-Order Butterworth Bandpass Filter</b><br/>0.75 Hz to 2.50 Hz (45 to 150 BPM physiological cardiac band)<br/>Zero-Phase Forward-Backward Filtering (sosfiltfilt, zero phase delay)"]:::filter
-    S7["<b>7. Windowed FFT, Spectral Density & Peak Tracking</b><br/>Hanning Window (suppresses sidelobes to -31.5 dB)<br/>Zero-Padding to N = 2048 Points (bin resolution Δf = 0.0146 Hz ≈ 0.88 BPM)<br/>Recursive Periodogram Smoothing: P_smooth = 0.85·P_prev + 0.15·P_raw"]:::spectral
-    S8["<b>8. Real-Time Oscilloscope HUD & Clinical Telemetry</b><br/>Digital Heart Rate Readout: HR = f_peak × 60<br/>Spectral Energy Ratio SNR (dB) &bull; 4-Tier Quality: OPTIMAL / GOOD / STABILIZING / WEAK"]:::output
+    S1["<b>1. Video Acquisition & Frame Capture</b><br/>• 30 FPS Standard Webcam / USB Video Stream / Synthetic Pulse Generator<br/>• High-precision hardware timestamping via time.perf_counter() (Empirical Fs tracking)"]:::input
+    S2["<b>2. Computer Vision & Multi-ROI Spatial Extraction</b><br/>• Frontal Face Tracking (OpenCV Haar Cascade) with 5-pixel deadband damping<br/>• Isolated Anatomical ROIs: Forehead (15-32% H) + Central Maxillary / Cheeks (High Perfusion)"]:::cv
+    S3["<b>3. Spatial Channel Extraction & Color Constancy</b><br/>• 10th-90th Percentile Luminance Trimming (rejects hair, shadows, specular glint)<br/>• <b>Green Mode:</b> s(t) = -G(t)/L(t) &nbsp;|&nbsp; <b>CHROM Mode:</b> 3D-to-1D Subspace Projection (Xs - α Ys)"]:::spatial
+    S4["<b>4. Temporal Rolling Buffer & Dynamic Pruning</b><br/>• 7.5-Second Sliding Window Buffer (approx. 225 frames at 30 Hz)<br/>• Dynamic time-stamp pruning: Fs_empirical = (N-1) / (t_last - t_first)"]:::buffer
+    S5["<b>5. Digital Detrending (Baseline Drift Suppression)</b><br/>• Linear least-squares drift removal: s(t) - (m·t + c)<br/>• Uniform moving average subtraction (2.0s window, mode='nearest') to strip slow respiration"]:::detrend
+    S6["<b>6. 4th-Order Butterworth Bandpass Filter</b><br/>• Physiological Cardiac Passband: 0.75 Hz to 2.50 Hz (45 to 150 BPM)<br/>• Zero-phase forward-backward filtering (sosfiltfilt) guarantees 0° phase distortion"]:::filter
+    S7["<b>7. Windowed FFT, Spectral Density & Peak Tracking</b><br/>• Hanning Window taper (suppresses spectral leakage sidelobes to -31.5 dB)<br/>• Zero-padding to N = 2048 points (fine bin resolution Δf ≈ 0.0146 Hz ≈ 0.88 BPM)<br/>• Recursive periodogram averaging: P_smooth = 0.85·P_prev + 0.15·P_raw with Gaussian prior"]:::spectral
+    S8["<b>8. Real-Time Oscilloscope HUD & Clinical Telemetry</b><br/>• Digital HR Readout: HR = f_peak × 60 BPM with live BVP pulse waveform<br/>• Spectral Energy Ratio SNR (dB) & Multi-tier Quality Gauge: OPTIMAL / GOOD / STABILIZING / WEAK"]:::output
 
     S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8
 ```
@@ -98,8 +94,6 @@ In addition to this primary `README.md`, this repository contains specialized do
 | File | Type | What Information It Contains |
 | :--- | :--- | :--- |
 | **[`THEORY_AND_MATHEMATICS.md`](THEORY_AND_MATHEMATICS.md)** | **Full Mathematical Treatise** | **Exhaustive academic document (10 sections)** detailing: the Modified Beer-Lambert Law, molar extinction coefficients of $\text{HbO}_2$, continuous/discrete Butterworth transfer functions $H(z)$, second-order sections (SOS), zero-padding sinc-interpolation proofs, CHROM orthogonal projection derivations, and periodogram variance reduction proofs. |
-| **[`pipeline_architecture.png`](pipeline_architecture.png)** | **System Architecture Diagram** | High-resolution, dark-themed architectural diagram detailing all 8 pipeline processing stages with mathematical operations and parameters. |
-| **[`generate_diagram.py`](generate_diagram.py)** | **Diagram Generator Script** | Standalone script using Matplotlib patches and layout algorithms to generate `pipeline_architecture.png` at 300 DPI. |
 | **[`test_dsp.py`](test_dsp.py)** | **Mathematical Test Suite** | Contains **9 automated unit tests** verifying filter stopband attenuation ($>20\text{ dB}$ suppression of 0.2 Hz drift and 8.0 Hz flicker), zero-phase preservation, and FFT accuracy across 60, 72, 85, 110, and 135 BPM ($< 1.0\text{ BPM}$ error). |
 | **[`verify_headless.py`](verify_headless.py)** | **Benchmark & Verification Script** | Standalone script that exercises the full pipeline headlessly using a synthetic 72 BPM cardiovascular pulse generator, measures precision, and generates [`dashboard_demo.png`](dashboard_demo.png). |
 | **[`requirements.txt`](requirements.txt)** | **Dependencies Manifest** | Lists all required Python libraries with version specifications (`opencv-python`, `numpy`, `scipy`, `matplotlib`, `pytest`). |
@@ -113,9 +107,7 @@ rPPG-HeartRate-DSP/
 ├── visualizer.py                    # OpenCV real-time HUD oscilloscope dashboard
 ├── test_dsp.py                      # Automated pytest unit test suite (9 tests)
 ├── verify_headless.py               # Headless verification and snapshot benchmark
-├── generate_diagram.py              # Architecture flowchart generation script (300 DPI)
 ├── haarcascade_frontalface_default.xml # Pre-trained frontal face cascade model
-├── pipeline_architecture.png        # High-resolution DSP pipeline block diagram
 ├── dashboard_demo.png               # Real-time execution screenshot
 ├── requirements.txt                 # Python package dependencies
 ├── .gitignore                       # Git exclusion rules
