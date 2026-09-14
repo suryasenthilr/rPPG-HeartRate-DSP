@@ -102,11 +102,23 @@ This project implements both methods to demonstrate the evolution of rPPG algori
 
 ---
 
-## 5. Project Repository Structure
+## 5. Project Repository Structure & Documentation Files
+
+In addition to this primary `README.md`, this repository contains specialized documentation, test benchmarks, and mathematical reference files:
+
+### 📖 Key Information & Documentation Files
+
+| File | Type | What Information It Contains |
+| :--- | :--- | :--- |
+| **[`THEORY_AND_MATHEMATICS.md`](THEORY_AND_MATHEMATICS.md)** | **Full Mathematical Treatise** | **Exhaustive academic document (10 sections)** detailing: the Modified Beer-Lambert Law, molar extinction coefficients of $\text{HbO}_2$, continuous/discrete Butterworth transfer functions $H(z)$, second-order sections (SOS), zero-padding sinc-interpolation proofs, CHROM orthogonal projection derivations, and periodogram variance reduction proofs. |
+| **[`test_dsp.py`](test_dsp.py)** | **Mathematical Test Suite** | Contains **9 automated unit tests** verifying filter stopband attenuation ($>20\text{ dB}$ suppression of 0.2 Hz drift and 8.0 Hz flicker), zero-phase preservation, and FFT accuracy across 60, 72, 85, 110, and 135 BPM ($< 1.0\text{ BPM}$ error). |
+| **[`verify_headless.py`](verify_headless.py)** | **Benchmark & Verification Script** | Standalone script that exercises the full pipeline headlessly using a synthetic 72 BPM cardiovascular pulse generator, measures precision, and generates [`dashboard_demo.png`](dashboard_demo.png). |
+| **[`requirements.txt`](requirements.txt)** | **Dependencies Manifest** | Lists all required Python libraries with version specifications (`opencv-python`, `numpy`, `scipy`, `matplotlib`, `pytest`). |
+| **[`LICENSE`](LICENSE)** | **Open-Source License** | Official MIT License governing the repository. |
 
 ```
 rPPG-HeartRate-DSP/
-├── main.py                          # Primary execution entrypoint
+├── main.py                          # Primary execution entrypoint (webcam, video, synthetic)
 ├── dsp_pipeline.py                  # Core signal processing & filtering algorithms
 ├── face_tracker.py                  # Face tracking, multi-ROI extraction & skin masking
 ├── visualizer.py                    # OpenCV real-time HUD oscilloscope dashboard
@@ -116,8 +128,9 @@ rPPG-HeartRate-DSP/
 ├── dashboard_demo.png               # Real-time execution screenshot
 ├── requirements.txt                 # Python package dependencies
 ├── .gitignore                       # Git exclusion rules
+├── LICENSE                          # MIT License file
 ├── THEORY_AND_MATHEMATICS.md        # Comprehensive mathematical derivations & proofs
-└── README.md                        # Project documentation
+└── README.md                        # Primary project documentation
 ```
 
 ---
