@@ -20,6 +20,12 @@
 
 ---
 
+## System Architecture & Pipeline Flowchart
+
+![Signal Processing Pipeline Architecture](pipeline_architecture.png)
+
+---
+
 ## 1. Cardiovascular Dynamics & The Optical Bio-Physics of rPPG
 
 The human cardiovascular system is a closed-loop hydrodynamic circuit. With every ventricular contraction of the heart (**systole**), a pulse pressure wave propagates through the aorta, arteries, arterioles, and into the microvascular capillary beds residing in the sub-dermal dermis layer of facial skin.
