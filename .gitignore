@@ -1,0 +1,23 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Testing artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Operating system artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Output test snapshots
+rppg_snapshot_*.png
