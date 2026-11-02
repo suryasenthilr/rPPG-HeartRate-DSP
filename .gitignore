@@ -21,3 +21,16 @@ desktop.ini
 
 # Output test snapshots
 rppg_snapshot_*.png
+
+# College Report & LaTeX submission files (kept private for university evaluation)
+*.tex
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.pdf
+VIT_logo.png
+
